@@ -18,6 +18,12 @@
 			var dx = 2;
 			var dy = -2;
 			var ballRadius = 10;
+			var r = 0;
+			var b = 0;
+			var g = 0;
+			function rng(){
+				return Math.floor(Math.random() *255) % 255;
+			}
 			function draw(){
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				drawBall();
@@ -25,9 +31,15 @@
 				y += dy;
 				if(y + dy < ballRadius || y + dy > canvas.height-ballRadius){
 					dy = -dy;
+					r = rng();
+					g = rng();
+					b = rng();
 				}
 				if(x + dx < ballRadius || x + dx > canvas.width-ballRadius){
 					dx = -dx;
+					r = rng();
+					g = rng();
+					b = rng();
 				}
 			}
 
@@ -35,7 +47,7 @@
 				
 				ctx.beginPath();
 				ctx.arc(x, y, ballRadius, 0, Math.PI*2);
-				ctx.fillStyle = "#0095DD";
+				ctx.fillStyle = "rgba(" + r.toString() + ", " + b.toString() + ", " + g.toString() + ", 1)";
 				ctx.fill();
 				ctx.closePath();
 			}
