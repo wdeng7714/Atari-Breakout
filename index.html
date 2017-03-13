@@ -27,12 +27,28 @@
 			var dp = 10;
 			var rightPressed = false;
 			var leftPressed = false;
+			var brickRowCount = 3;
+			var brickColumnCount = 5;
+			var brickWidth = 75;
+			var brickHeight = 20;
+			var brickPadding = 10;
+			var brickOffsetTop = 30;
+			var brickOffsetLeft = 30;
+			var bricks = [];
+			for(c = 0; c < brickColumnCount; c++){
+				bricks[c] = [];
+				for(r = 0; r < brickRowCount; r++){
+					bricks[c][r] = {x: 0, y: 0};
+				}
+			}	
+
 			function rng(){
 				return Math.floor(Math.random() *255) % 255;
 			}
 			function draw(){
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				drawBall();
+				drawBricks();
 				drawPaddle();
 				x += dx;
 				y += dy;
@@ -42,11 +58,15 @@
 					g = rng();
 					b = rng();
 				} 
+				else if(y + dy >= canvas.height - paddleHeight-ballRadius*2 && y + dy <= canvas.height - ballRadius*2 && x > paddleX && x < paddleX + paddleWidth){
+					dy = -dy;
+				}
 				else if(y + dy > canvas.height - ballRadius){
-					alert("GAME OVER");
+					dx = 0;
+					dy = 0;
 						//document.location.reload();
 				}
-				if(x + dx < ballRadius || x + dx > canvas.width-ballRadius){
+				else if(x + dx < ballRadius || x + dx > canvas.width-ballRadius){
 					dx = -dx;
 					r = rng();
 					g = rng();
@@ -79,13 +99,26 @@
 				ctx.closePath();
 			}
 
+			function drawBricks(){
+				for(c = 0; c < brickColumnCount; c++){
+					for(r = 0; r < brickRowCount; r++){
+						bricks[c][r].x = c*(brickWidth + brickPadding) + brickOffsetLeft;
+						bricks[c][r].y = r*(brickHeight + brickPadding) + brickOffsetTop;
+						ctx.beginPath();
+						ctx.rect(bricks[c][r].x, bricks[c][r].y, brickWidth, brickHeight);
+						ctx.fillStyle = "#0095DD";
+						ctx.fill();
+						ctx.closePath();
+					}
+				}
+			}
 			document.addEventListener("keydown", keyDownHandler, false);
 			document.addEventListener("keyup", keyUpHandler, false);
 
 			function keyDownHandler(e){
 				if(e.keyCode == 39){
 					rightPressed = true;
-					alert("down");
+					
 				}
 				else if(e.keyCode == 37){
 					leftPressed = true;
@@ -95,7 +128,7 @@
 			function keyUpHandler(e){
 				if(e.keyCode == 39){
 					rightPressed = false;
-					alert("up");
+					//alert("up");
 				}
 				else if(e.keyCode == 37){
 					leftPressed = false;
