@@ -24,7 +24,7 @@
 			var paddleHeight = 10;
 			var paddleWidth = 75;
 			var paddleX = (canvas.width - paddleWidth)/2;
-			var dp = 10;
+			var dp = 7;
 			var rightPressed = false;
 			var leftPressed = false;
 			var brickRowCount = 3;
@@ -35,42 +35,47 @@
 			var brickOffsetTop = 30;
 			var brickOffsetLeft = 30;
 			var bricks = [];
+			var score = 0;
 			for(c = 0; c < brickColumnCount; c++){
 				bricks[c] = [];
 				for(r = 0; r < brickRowCount; r++){
-					bricks[c][r] = {x: 0, y: 0};
+					bricks[c][r] = {x: 0, y: 0, status: 1};
 				}
 			}	
 
 			function rng(){
 				return Math.floor(Math.random() *255) % 255;
 			}
+			function changeColor(){
+				r = rng();
+				g = rng();
+				b = rng();
+				console.log("r = %d, g = %d, b = %d\n", r, g, b);
+			}
 			function draw(){
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				drawBall();
 				drawBricks();
+				drawBall();
+				
+				collisionDetection();
 				drawPaddle();
+				drawScore();
 				x += dx;
 				y += dy;
 				if(y + dy < ballRadius){
 					dy = -dy;
-					r = rng();
-					g = rng();
-					b = rng();
-				} 
-				else if(y + dy >= canvas.height - paddleHeight-ballRadius*2 && y + dy <= canvas.height - ballRadius*2 && x > paddleX && x < paddleX + paddleWidth){
+					
+				} // collision with paddle
+				else if(y +dy >= canvas.height - paddleHeight -ballRadius*2 && y + dy < canvas.height - ballRadius*2 && x+ballRadius > paddleX && x-ballRadius < paddleX + paddleWidth){
 					dy = -dy;
-				}
+				}// lands on floor
 				else if(y + dy > canvas.height - ballRadius){
-					dx = 0;
-					dy = 0;
+					endGame(0);
 						//document.location.reload();
 				}
 				else if(x + dx < ballRadius || x + dx > canvas.width-ballRadius){
 					dx = -dx;
-					r = rng();
-					g = rng();
-					b = rng();
+				
 				}
 				if(rightPressed && paddleX <= canvas.width - paddleWidth - dp){
 					paddleX += dp;
@@ -102,19 +107,56 @@
 			function drawBricks(){
 				for(c = 0; c < brickColumnCount; c++){
 					for(r = 0; r < brickRowCount; r++){
-						bricks[c][r].x = c*(brickWidth + brickPadding) + brickOffsetLeft;
-						bricks[c][r].y = r*(brickHeight + brickPadding) + brickOffsetTop;
-						ctx.beginPath();
-						ctx.rect(bricks[c][r].x, bricks[c][r].y, brickWidth, brickHeight);
-						ctx.fillStyle = "#0095DD";
-						ctx.fill();
-						ctx.closePath();
+						if(bricks[c][r].status){
+							bricks[c][r].x = c*(brickWidth + brickPadding) + brickOffsetLeft;
+							bricks[c][r].y = r*(brickHeight + brickPadding) + brickOffsetTop;
+							ctx.beginPath();
+							ctx.rect(bricks[c][r].x, bricks[c][r].y, brickWidth, brickHeight);
+							ctx.fillStyle = "#0095DD";
+							ctx.fill();
+							ctx.closePath();
+						}
 					}
 				}
 			}
+
 			document.addEventListener("keydown", keyDownHandler, false);
 			document.addEventListener("keyup", keyUpHandler, false);
-
+			function collisionDetection(){
+				for(c = 0; c < brickColumnCount; c++){
+					for(r = 0; r < brickRowCount; r++){
+						var b = bricks[c][r];
+						if(b.status){
+						//check for collision with brick
+							if(x+ballRadius > b.x && x-ballRadius < b.x+brickWidth && y+ballRadius > b.y && y-ballRadius < b.y+brickHeight){
+								
+								if(x > b.x+brickWidth || x < b.x){
+									//collision with left/right side of brick
+									dx = -dx
+								}
+								else if(y < b.y || y > b.y+brickHeight){
+									//collision with top/bottom of brick
+									dy = -dy;
+								}
+								changeColor();
+								score++;
+								b.status = 0;
+								if(score == brickRowCount * brickColumnCount){
+									endGame(1);
+								}
+							}
+							//if(y+ballRadius > b.y && y-ballRadius < b.y + brickHeight && )
+						}
+					}
+				}
+			}
+			function drawScore(){
+				ctx.beginPath();
+				ctx.font = "20px Cambria";
+				ctx.fillStyle = "black";
+				ctx.fillText("SCORE : "+ score, 30, 20);
+				ctx.closePath();
+			}
 			function keyDownHandler(e){
 				if(e.keyCode == 39){
 					rightPressed = true;
@@ -135,7 +177,59 @@
 				}
 
 			}
-			setInterval(draw, 10);
+			function endGame(result){
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				//drawBall();
+				//drawPaddle();
+				var faceRadius = 100;
+				var eyeLength = faceRadius/2
+				clearInterval(refresh);
+				dx = 0; 
+				dy = 0;
+				ctx.beginPath();
+				ctx.fillStyle = "pink";
+				ctx.arc(canvas.width/2, canvas.height/2, 100, 0, Math.PI*2);
+				ctx.fill();
+				ctx.closePath();
+				if(result){
+					
+					
+					ctx.beginPath();
+					ctx.font = "20px Cambria";
+					ctx.fillStyle = "black";
+					ctx.textAlign = "center";
+
+					ctx.fillText("YOU WIN!!! Press F5 to play again", canvas.width/2, 50);
+
+					ctx.lineWidth = 3;
+					ctx.arc(canvas.width/2 - faceRadius/2, canvas.height/2-faceRadius/4, 20, Math.PI, Math.PI*2, false);
+					//ctx.fill();
+					ctx.arc(canvas.width/2 + faceRadius/2, canvas.height/2-faceRadius/4, 20, Math.PI, Math.PI*2, false);
+					ctx.stroke();
+					ctx.closePath();
+
+					ctx.beginPath();
+					fillStyle = ""
+					ctx.arc(canvas.width/2, canvas.height/2 + faceRadius/4, faceRadius/2, Math.PI, Math.PI*2, true);
+					ctx.fill();
+					ctx.closePath();
+
+				}else{
+
+					ctx.beginPath();
+					ctx.font = "20px Cambria";
+					ctx.fillStyle = "black";
+					ctx.textAlign = "center";
+					ctx.fillText("YOU LOSE!!! Press F5 to play again", canvas.width/2,50);
+					ctx.rect(canvas.width/2 - faceRadius/2 - faceRadius/4, canvas.height/2-canvas.height/8, eyeLength, 10);
+					ctx.rect(canvas.width/2 + faceRadius/4, canvas.height/2-canvas.height/8, eyeLength, 10);
+					ctx.rect(canvas.width/2 - faceRadius/2, canvas.height/2+faceRadius/4, faceRadius, 10);
+					
+					ctx.fill();
+					ctx.closePath();
+				}
+			}
+			var refresh = setInterval(draw, 10);
 
 		</script>
 	</body>
